@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bot Console</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="shell" id="shell">
+
+    <!-- ================= 左栏：会话列表 ================= -->
+    <aside class="sidebar" aria-label="会话列表">
+      <div class="sidebar-head">
+        <div class="traffic" aria-hidden="true">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+        </div>
+        <div class="sidebar-title">
+          <h1>Bot Console</h1>
+          <p id="status-line" class="status-line">正在连接…</p>
+        </div>
+        <button id="refresh-btn" class="icon-btn" type="button" title="重新载入会话" aria-label="重新载入会话">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path d="M8 2.6a5.4 5.4 0 1 1-4.6 2.5" fill="none" stroke="currentColor"
+                  stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M3.1 2.2v3.2h3.2" fill="none" stroke="currentColor"
+                  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+          <circle cx="7" cy="7" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M10.2 10.2 13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <input id="search" class="search" type="search" autocomplete="off"
+               placeholder="搜索备注名或 UMO" aria-label="搜索会话">
+      </div>
+
+      <div class="conv-list" id="conv-list" role="listbox" aria-label="已登记会话"></div>
+
+      <div class="empty-hint" id="conv-empty" hidden>
+        <p class="empty-title">还没有可用会话</p>
+        <p class="empty-body">
+          到目标群聊或私聊里发一条消息，
+          然后发送 <code>/bind 备注名</code>。
+        </p>
+      </div>
+
+      <div class="sidebar-foot">
+        <span id="conv-count" class="foot-text">0 个会话</span>
+        <button id="banner-toggle" class="link-btn" type="button" hidden>查看提示</button>
+      </div>
+    </aside>
+
+    <!-- ================= 中栏：对话主区 ================= -->
+    <main class="main" aria-label="控制台主区">
+      <header class="main-head">
+        <div class="main-head-text">
+          <h2 id="main-title">选择一个会话</h2>
+          <p id="main-sub" class="main-sub">发送方是 Bot 本人，消息会直接出现在目标会话里</p>
+        </div>
+        <div class="main-head-actions">
+          <span class="pill" id="scene-pill" hidden>群聊</span>
+          <button id="toggle-inspector" class="icon-btn" type="button"
+                  title="显示/隐藏会话信息" aria-label="显示或隐藏会话信息" aria-pressed="true">
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 7.1v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <circle cx="8" cy="4.9" r="0.95" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="banner" id="banner" hidden>
+        <span id="banner-text"></span>
+        <button id="banner-close" class="icon-btn small" type="button" aria-label="关闭提示">×</button>
+      </div>
+
+      <section class="stream" id="stream" aria-live="polite" aria-label="发送历史">
+        <div class="placeholder" id="stream-empty">
+          <div class="placeholder-art" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="44" height="44">
+              <rect x="5" y="9" width="38" height="26" rx="7" fill="none"
+                    stroke="currentColor" stroke-width="2"/>
+              <path d="M14 35v5l6-5" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="17" cy="22" r="1.9" fill="currentColor"/>
+              <circle cx="24" cy="22" r="1.9" fill="currentColor"/>
+              <circle cx="31" cy="22" r="1.9" fill="currentColor"/>
+            </svg>
+          </div>
+          <p class="empty-title">这里会显示发送记录</p>
+          <p class="empty-body">选中左侧的会话，写下要说的话，确认后点发送。</p>
+        </div>
+      </section>
+
+      <!-- 二次确认条 -->
+      <div class="confirm-bar" id="confirm-bar" hidden>
+        <div class="confirm-text" id="confirm-text"></div>
+        <div class="confirm-actions">
+          <button id="confirm-cancel" class="btn ghost" type="button">取消</button>
+          <button id="confirm-ok" class="btn primary" type="button">确认发送</button>
+        </div>
+      </div>
+
+      <!-- 输入区 -->
+      <footer class="composer">
+        <div class="composer-top">
+          <div class="segmented" role="tablist" aria-label="发送模式">
+            <button id="mode-direct" class="seg" role="tab" type="button"
+                    aria-selected="true" data-mode="direct">直接以 Bot 发送</button>
+            <button id="mode-simulate" class="seg" role="tab" type="button"
+                    aria-selected="false" data-mode="simulate">模拟用户消息（调试）</button>
+          </div>
+          <span class="hint" id="mode-hint">消息会作为 Bot 本人直接发到目标会话</span>
+        </div>
+        <div class="input-row">
+          <textarea id="composer-input" class="input" rows="2" maxlength="4000"
+                    placeholder="输入要发送的文本…" aria-label="消息内容"></textarea>
+          <button id="send-btn" class="send-btn" type="button" disabled
+                  title="发送（⌘/Ctrl + Enter）" aria-label="发送">
+            <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true">
+              <path d="M3.4 10.1 16.2 4.2c.7-.3 1.4.4 1.1 1.1L11.4 16.9c-.3.7-1.3.6-1.5-.1l-1.3-5-5-1.3c-.7-.2-.8-1.2-.2-1.5z"
+                    fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+        <p class="composer-warn" id="composer-warn" hidden></p>
+      </footer>
+    </main>
+
+    <!-- ================= 右栏：会话信息 ================= -->
+    <aside class="inspector" id="inspector" aria-label="会话信息">
+      <div class="inspector-head">
+        <h3>会话信息</h3>
+        <button id="close-inspector" class="icon-btn small" type="button" aria-label="收起会话信息">×</button>
+      </div>
+      <div class="inspector-body" id="inspector-body">
+        <div class="inspector-empty" id="inspector-empty">选中会话后显示详细信息</div>
+
+        <div class="inspector-content" id="inspector-content" hidden>
+          <section class="field">
+            <label class="field-label">备注名</label>
+            <div class="field-value strong" id="field-alias">—</div>
+          </section>
+
+          <section class="field">
+            <label class="field-label">场景 / 平台</label>
+            <div class="field-value" id="field-scene">—</div>
+          </section>
+
+          <section class="field">
+            <label class="field-label">
+              UMO
+              <button id="copy-umo" class="link-btn tiny" type="button">复制</button>
+            </label>
+            <div class="field-value mono break" id="field-umo">—</div>
+          </section>
+
+          <section class="field">
+            <label class="field-label">目标 openid</label>
+            <div class="field-value mono break muted" id="field-target">—</div>
+            <p class="field-note">QQ 官方机器人的 openid 与群号无关，只能通过收到消息学习到。</p>
+          </section>
+
+          <section class="field">
+            <label class="field-label">最近活跃</label>
+            <div class="field-value" id="field-lastseen">—</div>
+          </section>
+
+          <section class="field">
+            <label class="field-label">本地频控估算</label>
+            <div class="quota">
+              <div class="quota-row">
+                <span class="quota-name">近 1 分钟</span>
+                <span class="quota-num" id="quota-window">— / —</span>
+              </div>
+              <div class="bar"><i id="bar-window" class="bar-fill"></i></div>
+              <div class="quota-row">
+                <span class="quota-name">今日</span>
+                <span class="quota-num" id="quota-day">— / —</span>
+              </div>
+              <div class="bar"><i id="bar-day" class="bar-fill"></i></div>
+              <p class="field-note" id="quota-note">仅本地计数，最终以 QQ 接口返回为准。</p>
+            </div>
+          </section>
+
+          <section class="field">
+            <label class="field-label">操作</label>
+            <div class="field-actions">
+              <button id="rename-btn" class="btn ghost wide" type="button">重命名备注</button>
+              <button id="forget-btn" class="btn ghost wide danger" type="button">删除登记</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

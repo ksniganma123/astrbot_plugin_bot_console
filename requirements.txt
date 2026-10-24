@@ -1,0 +1,4 @@
+# Bot Console 仅使用 AstrBot 自带的依赖，无需额外安装。
+# 显式列出的原因：让 AstrBot 的依赖检查不会因为空文件而告警。
+# - aiofiles / fastapi / starlette：AstrBot 核心自带（Web API 与异步文件读写）
+# - qq-botpy：QQ 官方适配器自带（兜底发送走 adapter.client.api）

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Bot Console · 离线预览</title>
+  <style>
+    :root { color-scheme: light dark; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      padding: 16px;
+      font: 13px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #eceff4;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: background-color 180ms cubic-bezier(.22,.61,.36,1);
+    }
+    body.dark { background: #0c0c10; color: #f5f5f7; }
+    .bar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+    .bar h1 { margin: 0; font-size: 13px; font-weight: 600; }
+    .bar p { margin: 0; font-size: 11.5px; opacity: .6; }
+    .bar button {
+      height: 26px; padding: 0 12px; border: none; border-radius: 6px;
+      background: #007aff; color: #fff; font: inherit; font-size: 11.5px;
+      font-weight: 550; cursor: pointer;
+    }
+    .bar button.ghost { background: rgba(120,120,128,.18); color: inherit; }
+    .frame-wrap {
+      flex: 1 1 auto; min-height: 0; overflow: hidden;
+      border-radius: 16px; background: transparent;
+    }
+    iframe { width: 100%; height: 100%; border: 0; display: block; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <h1>Bot Console · 离线预览</h1>
+    <p>用假数据渲染真实页面，不需要 AstrBot，也不会连接 QQ。</p>
+    <button id="theme-btn" class="ghost" type="button">切换深浅色</button>
+    <button id="reload-btn" class="ghost" type="button">重新载入</button>
+  </div>
+  <div class="frame-wrap">
+    <iframe id="frame" src="../pages/bot-console/index.html"></iframe>
+  </div>
+
+<script>
+/* --------------------------------------------------------------------------
+   离线预览用：给 pages/bot-console/index.html 注入一个假的 bridge。
+
+   真实的 bridge 由 AstrBot 的 Plugin Page 服务注入（window.AstrBotPluginPage，
+   实现见 astrbot/dashboard/plugin_page_bridge.js）；这里只实现这个页面用到的
+   那一小组方法：ready / getContext / apiGet / apiPost。
+
+   由于 index.html 里的 app.js 会轮询等待 bridge 最多 12 秒，所以在 iframe 的
+   load 事件之后补注入完全来得及。
+   -------------------------------------------------------------------------- */
+(function () {
+  "use strict";
+
+  var now = Math.floor(Date.now() / 1000);
+  var GROUP_UMO = "qq_official_1:GroupMessage:GROUP_OPENID_ABC";
+
+  var FAKE = {
+    conversations: {
+      ok: true, total: 3, bound: 2,
+      conversations: [
+        {
+          unified_msg_origin: GROUP_UMO, alias: "高三(2)班通知群", note: "",
+          platform: "qq_official", platform_id: "qq_official_1", scene: "group",
+          target_id: "GROUP_OPENID_ABC", last_seen_at: now - 95, message_count: 12,
+          display_name: "高三(2)班通知群", bound: true, scene_label: "群聊",
+          last_seen_text: "2025-10-27 21:14:03",
+          quota: { window_used: 3, window_limit: 60, window_remaining: 57,
+                   daily_used: 41, daily_limit: 1000, daily_remaining: 959,
+                   ratio: 0.05, level: "ok", message: "" }
+        },
+        {
+          unified_msg_origin: "qq_official_1:GroupMessage:GROUP_OPENID_MC",
+          alias: "MC 服务器交流群", note: "", platform: "qq_official",
+          platform_id: "qq_official_1", scene: "group",
+          target_id: "GROUP_OPENID_MC", last_seen_at: now - 4200, message_count: 57,
+          display_name: "MC 服务器交流群", bound: true, scene_label: "群聊",
+          last_seen_text: "2025-10-27 20:02:11",
+          quota: { window_used: 52, window_limit: 60, window_remaining: 8,
+                   daily_used: 820, daily_limit: 1000, daily_remaining: 180,
+                   ratio: 0.87, level: "warn",
+                   message: "接近频控阈值（近 1 分钟 52/60，今日 820/1000）" }
+        },
+        {
+          unified_msg_origin: "qq_official_1:FriendMessage:USER_OPENID_XYZ",
+          alias: "", note: "", platform: "qq_official",
+          platform_id: "qq_official_1", scene: "private",
+          target_id: "USER_OPENID_XYZ", last_seen_at: now - 8000, message_count: 2,
+          display_name: "未命名会话", bound: false, scene_label: "私聊",
+          last_seen_text: "2025-10-26 11:02:44",
+          quota: { window_used: 0, window_limit: 60, window_remaining: 60,
+                   daily_used: 2, daily_limit: 1000, daily_remaining: 998,
+                   ratio: 0.002, level: "ok", message: "" }
+        }
+      ]
+    },
+    history: {
+      ok: true, total: 3,
+      entries: [
+        { ts: now - 140, mode: "direct", alias: "高三(2)班通知群",
+          unified_msg_origin: GROUP_UMO,
+          content_preview: "临时通知：明天早读提前到 7:10。", success: false,
+          error: "兜底发送失败：QQ API 返回 400 频率限制", path: "none",
+          message_id: null, operator: "admin" },
+        { ts: now - 60, mode: "simulate", alias: "高三(2)班通知群",
+          unified_msg_origin: GROUP_UMO,
+          content_preview: "明天几点集合？", success: true, error: null,
+          path: "simulate", message_id: "sim_1", operator: "admin" },
+        { ts: now - 20, mode: "direct", alias: "高三(2)班通知群",
+          unified_msg_origin: GROUP_UMO,
+          content_preview: "今天的作业已经发到班级云盘，请大家注意查收。",
+          success: true, error: null, path: "primary", message_id: "m3",
+          operator: "admin" }
+      ]
+    },
+    status: {
+      ok: true, plugin: "astrbot_plugin_bot_console", version: "1.0.0",
+      platforms: [
+        { id: "qq_official_1", name: "qq_official",
+          description: "QQ 机器人官方 API 适配器",
+          is_qq_official: true, support_proactive_message: true }
+      ],
+      settings: {
+        allow_send: true, allow_simulate: true, auto_register: true,
+        send_fallback_enabled: true, require_bind_before_send: true,
+        qq_group_qpm_limit: 60, qq_group_daily_limit: 1000, quota_warn_ratio: 0.8
+      }
+    }
+  };
+
+  var lastPost = null;
+
+  /* 复刻 dashboard 的路由规则（见 AstrBot webui 里的
+     `B = e => `/api/v1/plugins/extensions/${pluginName}/${e}``）：
+     插件收到的是「插件内子路径」，插件名由 dashboard 补在前面，核心再拿
+     `<pluginName>/<subpath>` 去匹配注册的路由。
+     所以 endpoint 里再带一次插件名就会整串失配 →「未找到该路由」。
+     这里照这个规则判，离线预览也能暴露路由写错的问题。 */
+  var PLUGIN = "astrbot_plugin_bot_console";
+  var ROUTES = [
+    "conversations", "conversations/bind", "conversations/forget",
+    "send", "simulate", "history", "status"
+  ];
+
+  function routeMiss() {
+    return Promise.reject(new Error("未找到该路由"));
+  }
+
+  function resolveRoute(endpoint) {
+    var raw = String(endpoint == null ? "" : endpoint).replace(/^\/+/, "");
+    var full = PLUGIN + "/" + raw;
+    var prefix = PLUGIN + "/";
+    if (full.indexOf(prefix) !== 0) return null;
+    var sub = full.slice(prefix.length);
+    for (var i = 0; i < ROUTES.length; i += 1) {
+      if (sub === ROUTES[i] || sub.indexOf(ROUTES[i] + "/") === 0) {
+        return ROUTES[i].split("/")[0];
+      }
+    }
+    return null;
+  }
+
+  function installStub(win) {
+    if (!win || win.AstrBotPluginPage) return;
+    win.AstrBotPluginPage = {
+      ready: function () { return Promise.resolve(win.AstrBotPluginPage.getContext()); },
+      getContext: function () { return { locale: "zh-CN", isDark: isDark() }; },
+      getLocale: function () { return "zh-CN"; },
+      getI18n: function () { return {}; },
+      t: function (key, fallback) { return fallback || ""; },
+      onContext: function () { return function () {}; },
+      apiGet: function (endpoint) {
+        var key = resolveRoute(endpoint);
+        if (!key) return routeMiss();
+        return Promise.resolve(FAKE[key] || { ok: true });
+      },
+      apiPost: function (endpoint, body) {
+        var key = resolveRoute(endpoint);
+        if (!key) return routeMiss();
+        lastPost = { endpoint: endpoint, body: body };
+        console.log("[preview] POST", endpoint, body);
+        return Promise.resolve({
+          ok: true, path: "primary", warnings: [], message_id: "preview_msg",
+          alias: "预览", scene: "group"
+        });
+      },
+      subscribeSSE: function () { return Promise.resolve("sse"); },
+      unsubscribeSSE: function () { return Promise.resolve(); }
+    };
+  }
+
+  function isDark() {
+    return document.body.classList.contains("dark");
+  }
+
+  var frame = document.getElementById("frame");
+  var hooked = false;
+
+  function hook() {
+    try {
+      installStub(frame.contentWindow);
+      // 让内嵌页面跟随预览页的深浅色
+      var doc = frame.contentDocument;
+      if (doc) {
+        doc.documentElement.setAttribute("data-theme", isDark() ? "dark" : "light");
+      }
+    } catch (error) {
+      console.error("[preview] 注入失败", error);
+    }
+  }
+
+  if (!hooked) {
+    hooked = true;
+    frame.addEventListener("load", function () { setTimeout(hook, 10); });
+  }
+
+  document.getElementById("theme-btn").addEventListener("click", function () {
+    document.body.classList.toggle("dark");
+    try {
+      frame.contentDocument.documentElement.setAttribute(
+        "data-theme", isDark() ? "dark" : "light"
+      );
+    } catch (error) { /* ignore */ }
+  });
+
+  document.getElementById("reload-btn").addEventListener("click", function () {
+    frame.contentWindow.location.reload();
+  });
+
+  // 首次加载（脚本在 iframe 之后执行，load 可能已经触发过）
+  setTimeout(hook, 60);
+  window.__previewLastPost = function () { return lastPost; };
+})();
+</script>
+</body>
+</html>

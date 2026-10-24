@@ -1,0 +1,68 @@
+{
+  "enabled": {
+    "description": "启用 Bot 控制台",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后不再自动登记会话，/bind 与 Web 端发送均不可用"
+  },
+  "auto_register": {
+    "description": "自动登记收到的会话",
+    "type": "bool",
+    "default": true,
+    "hint": "监听所有消息事件，把会话的 UMO 与 openid 记进 conversations.json。关闭后只能用 /bind 手动登记"
+  },
+  "allow_send": {
+    "description": "允许 Web 端主动发送",
+    "type": "bool",
+    "default": true,
+    "hint": "关闭后 /send 接口直接拒绝，只保留会话浏览与 /simulate 调试"
+  },
+  "allow_simulate": {
+    "description": "允许模拟用户消息",
+    "type": "bool",
+    "default": true,
+    "hint": "注入一条伪造的用户消息到消息管道，用于观察 Bot 的 LLM 回复。属于调试功能"
+  },
+  "send_fallback_enabled": {
+    "description": "启用 QQ 官方群聊兜底发送",
+    "type": "bool",
+    "default": true,
+    "hint": "context.send_message 失败或平台适配器不会真正发送时，直接调用 QQ 官方 post_group_message 接口兜底"
+  },
+  "qq_group_qpm_limit": {
+    "description": "单群每分钟主动消息上限",
+    "type": "int",
+    "default": 60,
+    "hint": "QQ 官方认证机器人主动消息频控为 60 条/分钟。插件只做本地计数并在接近阈值时告警，不会阻塞发送，最终以 API 返回为准"
+  },
+  "qq_group_daily_limit": {
+    "description": "单群每天主动消息上限",
+    "type": "int",
+    "default": 1000,
+    "hint": "本地计数用，用于在 UI 上提示剩余额度"
+  },
+  "quota_warn_ratio": {
+    "description": "频控告警阈值",
+    "type": "float",
+    "default": 0.8,
+    "hint": "已用额度超过该比例时 UI 显示告警色，取值 0~1"
+  },
+  "audit_max_lines": {
+    "description": "审计日志单次读取行数",
+    "type": "int",
+    "default": 200,
+    "hint": "控制台中间消息流最多回显多少条历史发送记录"
+  },
+  "audit_retention_days": {
+    "description": "审计日志保留天数",
+    "type": "int",
+    "default": 90,
+    "hint": "超过该天数的记录会在插件启动时被裁剪，填 0 表示永久保留"
+  },
+  "require_bind_before_send": {
+    "description": "发送前必须已绑定备注名",
+    "type": "bool",
+    "default": true,
+    "hint": "开启后未命名会话不允许发送，避免误发到不认识的会话。建议保持开启"
+  }
+}

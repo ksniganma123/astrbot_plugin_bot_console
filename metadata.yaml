@@ -1,0 +1,14 @@
+name: astrbot_plugin_bot_console
+desc: Bot 控制台：以 Bot 为发送方视角，在 WebUI 里按备注名选择群聊/私聊，手动以 Bot 身份主动发送消息（主打 QQ 官方机器人），并可选地把输入模拟为用户消息注入消息管道以观察 LLM 回复
+short_desc: macOS 风格聊天控制台，手动以 Bot 身份主动发消息
+version: 1.0.1
+author: K5NGM
+repo: https://github.com/ksniganma123/astrbot_plugin_bot_console
+display_name: Bot Console 控制台
+astrbot_version: ">=4.15.0"
+support_platforms:
+  - qq_official
+  - qq_official_webhook
+  - aiocqhttp
+pages:
+  - bot-console
